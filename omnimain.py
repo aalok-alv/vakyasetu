@@ -2,6 +2,16 @@ import customtkinter as ctk
 import math
 
 
+# ------------------ SAFE IMPORTS ------------------
+def safe_import(module_name):
+    try:
+        return __import__(module_name)
+    except ImportError:
+        return None
+
+text_to_speech_ENG = safe_import("text_to_speech_ENG")
+
+
 # ------------------ UI CONFIG ------------------
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -241,10 +251,15 @@ class VakyaSetuApp(ctk.CTk):
             direction = 1 if diff <= len(self.cards)//2 else -1
             self.move_carousel(direction)
 
-    def activate(self, idx):
-        data = STRINGS[self.current_lang]["cards"][idx]
-        self.show_toast(f"Activated: {data[1]} / {data[0]}")
-        # Here you would route to the actual feature screen
+    def activate(self, index):
+        if index == 0: 
+            top = ctk.CTkToplevel(self)
+            if self.current_lang == "English" and text_to_speech_ENG: 
+                text_to_speech_ENG.AlphabetLocator(top)
+            else: 
+                self.show_toast(f"Talk module missing for {self.current_lang}!")
+                top.destroy()
+            
         
 if __name__ == "__main__":
     app = VakyaSetuApp()
