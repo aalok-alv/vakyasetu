@@ -10,6 +10,7 @@ def safe_import(module_name):
         return None
 
 text_to_speech_ENG = safe_import("text_to_speech_ENG")
+text_to_speech_HIN = safe_import("text_to_speech_HIN")
 
 
 # ------------------ UI CONFIG ------------------
@@ -256,6 +257,8 @@ class VakyaSetuApp(ctk.CTk):
             top = ctk.CTkToplevel(self)
             if self.current_lang == "English" and text_to_speech_ENG: 
                 text_to_speech_ENG.AlphabetLocator(top)
+            elif self.current_lang == "Hindi" and text_to_speech_HIN: 
+                text_to_speech_HIN.AlphabetLocatorHindi(top)
             else: 
                 self.show_toast(f"Talk module missing for {self.current_lang}!")
                 top.destroy()
