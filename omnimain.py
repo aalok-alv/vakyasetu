@@ -13,6 +13,9 @@ text_to_speech_ENG = safe_import("text_to_speech_ENG")
 text_to_speech_HIN = safe_import("text_to_speech_HIN")
 chat_ENG = safe_import("chat_ENG")
 chat_HIN = safe_import("chat_HIN")
+news = safe_import("news")
+books = safe_import("books")
+photos = safe_import("photos")
 
 # ------------------ UI CONFIG ------------------
 ctk.set_appearance_mode("dark")
@@ -263,6 +266,7 @@ class VakyaSetuApp(ctk.CTk):
             else: 
                 self.show_toast(f"Talk module missing for {self.current_lang}!")
                 top.destroy()
+
         elif index == 1: 
             if self.current_lang == "English" and chat_ENG: 
                 chat_ENG.main()
@@ -271,7 +275,23 @@ class VakyaSetuApp(ctk.CTk):
             else: 
                 self.show_toast(f"Chat module missing for {self.current_lang}!")
 
+        elif index == 2: 
+            if news: 
+                news.main() 
+            else: 
+                self.show_toast("News module not found (news.py)")
+
+        elif index == 3: 
+            if books: 
+                books.main()
+            else:
+                self.show_toast("Books module not found (books.py)")
             
+        elif index == 4: 
+            if photos:
+                photos.main()
+            else:
+                self.show_toast("Photos module not found (photos.py)")
         
 if __name__ == "__main__":
     app = VakyaSetuApp()
