@@ -244,6 +244,7 @@ class VakyaSetuApp(ctk.CTk):
 
     # ---------------- INTERACTION & ROUTING ----------------
     def move_carousel(self, direction):
+        print(self.current_index)
         self.current_index = (self.current_index + direction) % len(self.cards)
         self.update_focus()
 

@@ -116,6 +116,7 @@ class AlphabetLocator:
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
         
+        self.mode = "matrix"
 
         # Grid configuration
         self.alphabet_rows = 7
@@ -156,7 +157,8 @@ class AlphabetLocator:
         
         self.history_entry.grid(row=0, column=0, columnspan=self.cols+1, pady=10, padx=10, sticky="nsew")
         # self.history_entry.bind("<KeyRelease>", self.on_key_release_in_entry)
-        self.history_entry.bind("<Down>", self.move_suggestion_down)
+        # self.history_entry.bind("<Delete>", self.move_suggestion_down)
+        self.history_entry.bind("<Down>", self.change_mode)
         # self.history_entry.bind("<Up>", self.move_suggestion_up)
         self.history_entry.bind("<Return>", self.confirm_suggestion_from_entry)
         self.history_entry.bind('<Map>', self.history_entry.focus_set())
@@ -245,33 +247,33 @@ class AlphabetLocator:
                 else:
                     self.labels[r][c].configure(fg_color="gray15")
         
-        
+        if self.mode == "matrix":
+            # Highlight based on stage
+            if self.stage == "col":
+                for r in range(self.rows):
+                    self.labels[r][self.current_col].configure(fg_color="royalblue4")
+                    # self.status.configure(text=f"Selected column: {self.current_col+1}. Now choose row (↑ ↓).")
 
-        # Highlight based on stage
-        if self.stage == "col":
-            for r in range(self.rows):
-                self.labels[r][self.current_col].configure(fg_color="royalblue4")
-            self.status.configure(text=f"Selected column: {self.current_col+1}. Now choose row (↑ ↓).")
-
-        elif self.stage == "row":
-            for c in range(self.cols):
-                self.labels[self.current_row][c].configure(fg_color="seagreen4")
-            if self.current_row == 0:
-                self.status.configure(text="Selected Actions row. Press ENTER to perform action.")
-            else:
-                self.status.configure(text=f"Selected row: {self.current_row}. Press ENTER to confirm.")
+            elif self.stage == "row":
+                for c in range(self.cols):
+                    self.labels[self.current_row][c].configure(fg_color="seagreen4")
+                if self.current_row == 0:
+                    self.status.configure(text="Selected Actions row. Press ENTER to perform action.")
+                else:
+                    self.status.configure(text=f"Selected row: {self.current_row}. Press ENTER to confirm.")
 
     #NAVIGATION CONTROLS
 
     def matrix_navigation(self, event):
-    
-        if self.stage == "col":
-            self.current_col = (self.current_col + 1) % self.cols
-            self.highlight_selection()
 
-        if self.stage == "row":
-            self.current_row = (self.current_row + 1) % self.rows
-            self.highlight_selection()
+        if self.mode == "matrix":
+            if self.stage == "col":
+                self.current_col = (self.current_col + 1) % self.cols
+                self.highlight_selection()
+
+            if self.stage == "row":
+                self.current_row = (self.current_row + 1) % self.rows
+                self.highlight_selection()
 
 
 
@@ -314,6 +316,27 @@ class AlphabetLocator:
         self.root.after(800, self.reset_selection)
         self.show_autocomplete()
     
+    def change_mode(self, event):
+        if self.mode == "matrix":
+            self.mode = "suggestion"
+            self.reset_selection()
+            self.history_entry.bind("<Delete>", self.move_suggestion_down)
+        
+            for r in range(self.rows):
+                for c in range(self.cols):
+                    if r == 0:
+                        self.labels[r][c].configure(fg_color="gray25")
+                    else:
+                        self.labels[r][c].configure(fg_color="gray15")
+            self.status.configure(text="Switched to suggestion mode. Use Up/Down to navigate suggestions.")
+        
+        else:
+            self.mode = "matrix"
+            self.root.bind("<Delete>", self.matrix_navigation)
+            self.highlight_selection()
+            self.status.configure(text="Switched to matrix mode. Select a column (← →).")
+
+
 
     def reset_selection(self):
         """Reset selection back to column stage."""
@@ -352,61 +375,6 @@ class AlphabetLocator:
             self.suggestion_box.grid_remove()
             return
 
-        # Example corpus for language suggestions (medical/help phrases)
-        # corpus = """
-        # I am hungry
-        # I am thirsty
-        # I am tired
-        # I am in pain
-        # I am cold
-        # I am hot
-        # Please adjust my pillow
-        # Please move my hand
-        # Please help me sit up
-        # Please help me lie down
-        # Call the nurse
-        # Call the doctor
-        # I need medicine
-        # I feel dizzy
-        # I feel weak
-        # I cannot breathe properly
-        # Please check my blood pressure
-        # Please check my sugar level
-        # I am happy
-        # I am sad
-        # I am scared
-        # I feel lonely
-        # I am comfortable
-        # Thank you for helping me
-        # I love you
-        # Please stay with me
-        # Hello
-        # Good morning
-        # Good night
-        # How are you?
-        # I am fine
-        # Yes
-        # No
-        # Maybe
-        # Please
-        # Thank you
-        # Sorry
-        # exit
-        # I want to watch TV
-        # I want to listen to music
-        # I want to read a book
-        # I want to sleep
-        # I want to go outside
-        # Please open the window
-        # Please turn on the fan
-        # Please turn off the light
-        # Call my family
-        # Call an ambulance
-        # I cannot move
-        # I need help immediately
-        # I am choking
-        # I am having chest pain
-        # """
 
         with open("wordlist.txt",'r') as wordlist:
             corpus = wordlist.read()
@@ -443,13 +411,17 @@ class AlphabetLocator:
             else:
                 lbl.configure(fg_color="gray30")
 
+
     def move_suggestion_down(self, event):
         """Move suggestion highlight down."""
+        # self.mode = "suggestion"
         if not self.suggestions:
             return None
-        self.selected_index = (self.selected_index + 1) % len(self.suggestion_labels)
-        self.update_suggestion_highlight()
-        return "break"
+        
+        if self.mode == "suggestion":
+            self.selected_index = (self.selected_index + 1) % len(self.suggestion_labels)
+            self.update_suggestion_highlight()
+            return "break"
 
 
     def confirm_suggestion_from_entry(self, event):
